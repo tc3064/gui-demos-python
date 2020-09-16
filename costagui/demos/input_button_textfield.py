@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__) #launch app with name (but name is not needed)
 
 subject_id_input = dcc.Input(
     id='subject-id-input',
