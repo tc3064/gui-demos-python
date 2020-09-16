@@ -40,7 +40,7 @@ subject_table = dash_table.DataTable(
     sort_action='native',
     # allow filtering
     filter_action='native',
-    # # # allow selecting a single entry
+    # allow selecting a single entry
     row_selectable='single',
     **table_style_template
 )
