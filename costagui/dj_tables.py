@@ -5,3 +5,4 @@ dj.config['database.password'] = 'test1'
 
 lab = dj.create_virtual_module('lab', 'costa_lab')
 subject = dj.create_virtual_module('subject', 'costa_subject')
+hardware = dj.create_virtual_module('hardware', 'costa_hardware')

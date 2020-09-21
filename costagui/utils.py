@@ -74,6 +74,7 @@ def get_default(query, field):
         return ''
 
 
+
 if __name__ == "__main__":
 
     from dj_tables import lab, subject
