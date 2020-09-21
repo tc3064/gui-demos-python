@@ -38,7 +38,7 @@ def get_options(table, field, context=None):
                     parent_field = list(list(graph.parents(key).values())[0]['attr_map'].items())[0][1]
                 except ValueError:
                     parent_table_name = key
-                    parent_field = list(value['attr_map'].values())[0]
+                    parent_field = value['attr_map'][1]
                 break
 
         parent_table = dj.table.lookup_class_name(
@@ -72,6 +72,7 @@ def get_default(query, field):
             return ''
     else:
         return ''
+
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
-import dash
+import dash 
 import dash_table
 import dash_html_components as html
 import dash_core_components as dcc
 
 from dj_tables import lab, subject
 
-app = dash.Dash()
+app = dash.Dash() #create an instance of an app
 
 subjs = subject.Subject.fetch(as_dict=True)
 columns = [{"name": i, "id": i} for i in subject.Subject.heading.names]
@@ -40,13 +40,13 @@ subject_table = dash_table.DataTable(
     sort_action='native',
     # allow filtering
     filter_action='native',
-    # allow selecting a single entry
+    # # # allow selecting a single entry
     row_selectable='single',
     **table_style_template
 )
 
-app.layout = html.Div(
-    children=[
+app.layout = html.Div(      #app MUST have a layout in order to launch, first UI element is Div 
+    children=[     #First argument is children (can include or not) & include a list 
         'Mouse table',
         subject_table
 ])
