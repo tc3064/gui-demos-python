@@ -1,3 +1,4 @@
+# %%
 import datajoint as dj
 import dash
 import dash_table
@@ -5,7 +6,7 @@ from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
 import copy
-
+# %%
 from dj_tables import lab, subject
 import utils
 
@@ -14,6 +15,7 @@ import subject_tab, hardware_tab
 ## ========================= Create a flask app ===========================
 # dash does the job for you
 app = dash.Dash(__name__)
+app.config.suppress_callback_exceptions = True
 
 ## ========================= Construct webpage layout ========================
 app.layout = html.Div([
@@ -102,15 +104,17 @@ def set_button_enabled_state(selected_rows):
 # arguments of the call back function need to be the same order
 # as the Input and State
 def add_hardware(n_clicks_add, n_clicks_delete, new_data, data, selected_rows):
+    print(n_clicks_delete)
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
+    print(triggered_component)
     if triggered_component == 'add-hardware-button':
         entry = {k: v for k, v in new_data[0].items() if v!=''}
         hardware.Computer.insert1(entry)
         data = hardware.Computer.fetch(as_dict=True)
 
     if triggered_component == 'delete-hardware-button' and selected_rows:
-        print(selected_rows)
+        print('trying to delete row: {}'.format(selected_rows))
         comp = {'computer_name': data[selected_rows[0]]['computer_name']}
         (hardware.Computer & comp).delete()
         data = hardware.Computer.fetch(as_dict=True)
@@ -129,8 +133,8 @@ def set_button_enabled_state(selected_rows):
         disabled = True
     return disabled, disabled
 
-## ========================= Run server =========================
 
+## ========================= Run server =========================
 if __name__ == '__main__':
     dj.config['safemode'] = False
     # run the server, debug = True allows auto-updating without restarting the server.

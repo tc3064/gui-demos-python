@@ -76,9 +76,9 @@ for c in columns:
 # add subject table style
 add_hardware_style = copy.deepcopy(table_style_template)
 add_hardware_style['style_table'].update({
-    'minHeight': '200px',
-    'height': '200px',
-    'maxHeight': '200px',
+    'minHeight': '100px',
+    'height': '100px',
+    'maxHeight': '100px',
 })
 
 add_hardware_table = dash_table.DataTable(
@@ -262,7 +262,7 @@ hardware_tab_contents = html.Div(
                             add_hardware_button,
                             add_hardware_table
                         ],
-                        style={'marginBottom': '-90px'}
+                        style={'marginBottom': '0px'}
                     ),
 
                     html.Div(
