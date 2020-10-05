@@ -85,12 +85,11 @@ def create_add_record_table(table, table_id, dropdown_fields=[],
             if c['name'] in dropdown_fields:
                 c.update(presentation="dropdown")
 
-    if is_update:
-        editable = [{c['id']: False}
-                    if c['id'] in heading.primary_key else {c['id']: True}
-                    for c in columns]
-    else:
-        editable = True
+    for c in columns:
+        if c['name'] in heading.primary_key and is_update:
+            c.update(editable=False)
+        else:
+            c.update(editable=True)
 
     return dash_table.DataTable(
         id=table_id,
@@ -98,7 +97,6 @@ def create_add_record_table(table, table_id, dropdown_fields=[],
         data=[{c['id']: dj_utils.get_default(table, c['id'])
               for c in columns}],
         **table_style,
-        editable=editable,
         dropdown={
             f:
             {
@@ -115,7 +113,8 @@ def create_update_modal(table, id, dropdown_fields):
     update_table = create_add_record_table(
         subject.Subject, 'update-' + id + '-table',
         dropdown_fields=dropdown_fields,
-        height='200px', width='800x')
+        height='200px', width='800x',
+        is_update=True)
 
     update_message_box = dcc.Textarea(
         id='update-' + id + '-message',

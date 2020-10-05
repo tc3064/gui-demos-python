@@ -166,7 +166,7 @@ def update_subject_record(n_clicks, data):
 
     msg = 'Update message:\n'
     for f in subject_fields:
-        if new[f] != old[f] and not (old is None and new==''):
+        if new[f] != old[f] and not (old is None and new == ''):
             if type(old[f]) == datetime.date and \
                     old[f] == datetime.datetime.strptime(
                         new[f], '%Y-%m-%d').date():
@@ -186,6 +186,5 @@ def update_subject_record(n_clicks, data):
 
 if __name__ == '__main__':
     dj.config['safemode'] = False
-    app.layout = html.Div(subject_tab_contents)
-
+    app.layout = subject_tab_contents
     app.run_server(debug=True)
