@@ -61,7 +61,7 @@ def create_display_table(table, table_id, height='900px', width='1200px'):
     )
 
 
-def create_add_record_table(table, table_id, dropdown_fields,
+def create_add_record_table(table, table_id, dropdown_fields=[],
                             height='150px', width='1200px',
                             is_update=False):
 
@@ -80,9 +80,10 @@ def create_add_record_table(table, table_id, dropdown_fields,
     heading = table.heading
     columns = [{"name": i, "id": i} for i in heading.names]
     # some fields are presented as dropdown list
-    for c in columns:
-        if c['name'] in dropdown_fields:
-            c.update(presentation="dropdown")
+    if dropdown_fields:
+        for c in columns:
+            if c['name'] in dropdown_fields:
+                c.update(presentation="dropdown")
 
     if is_update:
         editable = [{c['id']: False}
@@ -145,7 +146,7 @@ def create_filter_dropdown(table, id, field, width='200px'):
     return dcc.Dropdown(
         id=id,
         options=[
-            {'label': f, 'value': f} for f in (dj.U(field) & table) .fetch(field)
+            {'label': f, 'value': f} for f in (dj.U(field) & table).fetch(field)
         ],
         style={'width': width, 'marginBottom': '0.5em'},
         placeholder='Select {} ...'.format(field),
