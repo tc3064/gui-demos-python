@@ -8,7 +8,8 @@ import copy
 
 import dash_bootstrap_components as dbc
 from dj_tables import hardware
-import utils
+from costagui_demos.app import app
+from costagui_demos import dj_utils, component_utils
 
 
 # ========================= Construct components =========================
@@ -84,7 +85,7 @@ add_hardware_style['style_table'].update({
 add_hardware_table = dash_table.DataTable(
     id='add-hardware-table',
     columns=columns,
-    data=[{c['id']: utils.get_default(hardware.Computer, c['id']) for c in columns}],
+    data=[{c['id']: dj_utils.get_default(hardware.Computer, c['id']) for c in columns}],
     **add_hardware_style,
     editable=True
     )
@@ -190,7 +191,44 @@ hardware_tab_contents = html.Div(
         )
     ]
 )
+@app.callback(
+    # first argument is the id of a component, second is the field of that component
+    Output('hardware-table', 'data'), # function returns overwrite the 'data' here
+    [Input('add-hardware-button', 'n_clicks'),
+     Input('delete-hardware-button', 'n_clicks')],
+    [State('add-hardware-table', 'data'),
+     State('hardware-table', 'data'),
+     State('hardware-table', 'selected_rows')])
+# arguments of the call back function need to be the same order
+# as the Input and State
+def add_hardware(n_clicks_add, n_clicks_delete, new_data, data, selected_rows):
+    print(n_clicks_delete)
+    ctx = dash.callback_context
+    triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
+    print(triggered_component)
+    if triggered_component == 'add-hardware-button':
+        entry = {k: v for k, v in new_data[0].items() if v!=''}
+        hardware.Computer.insert1(entry)
+        data = hardware.Computer.fetch(as_dict=True)
 
+    if triggered_component == 'delete-hardware-button' and selected_rows:
+        comp = {'computer_name': data[selected_rows[0]]['computer_name']}
+        (hardware.Computer & comp).delete()
+        data = hardware.Computer.fetch(as_dict=True)
+
+    return data
+
+
+@app.callback(
+    [Output('delete-hardware-button', 'disabled'),
+     Output('update-hardware-button', 'disabled')],
+    [Input('hardware-table', 'selected_rows')])
+def set_button_enabled_state(selected_rows):
+    if selected_rows:
+        disabled = False
+    else:
+        disabled = True
+    return disabled, disabled
 
 if __name__ == '__main__':
 
