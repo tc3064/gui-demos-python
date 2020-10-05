@@ -79,7 +79,8 @@ subject_tab_contents = html.Div(
                         [subject_table],
                         style={'marginBottom': '1em'}),
                 ]
-            )
+            ),
+            update_subject_modal
         ]
 
     )
@@ -185,11 +186,6 @@ def update_subject_record(n_clicks, data):
 
 if __name__ == '__main__':
     dj.config['safemode'] = False
-    app.layout = html.Div(
-        [
-            subject_tab_contents,
-            update_subject_modal,
-        ]
-    )
+    app.layout = html.Div(subject_tab_contents)
 
     app.run_server(debug=True)

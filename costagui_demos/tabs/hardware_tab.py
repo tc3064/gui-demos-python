@@ -144,7 +144,7 @@ tables = {
     [Output('current-table', 'children'),
      Output('current-hardware-table', 'children'),
      Output('current-add-hardware-table', 'children')],
-    [Input(t, 'n_clicks') for t in tables],
+    [Input(t, 'n_clicks') for t in tables.keys()],
 )
 def update_current_table(*args):
     ctx = dash.callback_context
