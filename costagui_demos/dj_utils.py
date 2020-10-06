@@ -15,7 +15,7 @@ def get_options(table, field, context=None):
     Output: a list of possible values of this field, return empty list if there is no options
     '''
     if not context:
-        context = inspect.currentframe().f_back.f_locals
+        context = inspect.currentframe().f_back.f_globals
 
     inspect.currentframe().f_locals.update(**context)
 

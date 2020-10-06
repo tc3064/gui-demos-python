@@ -1,0 +1,10 @@
+.dash-spreadsheet .row {
+  flex-wrap: nowrap;
+}
+.dash-table-container .row {
+  display: block;
+  margin: 0;
+}
+.Select-menu-outer {
+  display : block !important;
+}
