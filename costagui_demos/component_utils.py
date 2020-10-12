@@ -30,7 +30,8 @@ table_style_template = dict(
         'fontWeight': 'bold'})
 
 
-def create_display_table(table, table_id, height='900px', width='1200px'):
+def create_display_table(table, table_id, height='900px', width='1200px',
+                         selectable=True, excluded_fields=[], empty_first=False):
 
     table_style = copy.deepcopy(table_style_template)
     table_style.update(
@@ -39,8 +40,13 @@ def create_display_table(table, table_id, height='900px', width='1200px'):
         sort_action='native',
         # allow filtering
         filter_action='native',
-        # allow selecting a single entry
-        row_selectable='single')
+    )
+
+    if selectable:
+        table_style.update(
+            # allow selecting a single entry
+            row_selectable='single'
+        )
 
     table_style['style_table'].update(
         {
@@ -53,17 +59,33 @@ def create_display_table(table, table_id, height='900px', width='1200px'):
         }
     )
 
+    columns = [{"name": i, "id": i}
+               for i in table.heading.names if i not in excluded_fields]
+
+    if empty_first:
+        data = [{c['id']: '' for c in columns}]
+    else:
+        data = table.fetch(as_dict=True)
+
     return dash_table.DataTable(
         id=table_id,
-        columns=[{"name": i, "id": i} for i in table.heading.names],
-        data=table.fetch(as_dict=True),
+        columns=columns,
+        data=data,
         **table_style
     )
 
 
-def create_add_record_table(table, table_id, dropdown_fields=[],
+def create_add_record_table(table, table_id,
+                            dropdown_fields=[], excluded_fields=[],
                             height='150px', width='1200px',
-                            is_update=False):
+                            n_rows=1,
+                            is_update=False,
+                            deletable=False):
+
+    if not dropdown_fields:
+        dropdown_fields = dj_utils.get_dropdown_fields(table)
+
+    dropdown_fields = [f for f in dropdown_fields if f not in excluded_fields]
 
     table_style = copy.deepcopy(table_style_template)
     table_style['style_table'].update(
@@ -78,7 +100,8 @@ def create_add_record_table(table, table_id, dropdown_fields=[],
     )
 
     heading = table.heading
-    columns = [{"name": i, "id": i} for i in heading.names]
+    columns = [{"name": i, "id": i}
+               for i in heading.names if i not in excluded_fields]
     # some fields are presented as dropdown list
     if dropdown_fields:
         for c in columns:
@@ -95,7 +118,7 @@ def create_add_record_table(table, table_id, dropdown_fields=[],
         id=table_id,
         columns=columns,
         data=[{c['id']: dj_utils.get_default(table, c['id'])
-              for c in columns}],
+              for c in columns}] * n_rows,
         **table_style,
         dropdown={
             f:
@@ -104,28 +127,52 @@ def create_add_record_table(table, table_id, dropdown_fields=[],
                             for i in dj_utils.get_options(table, f)]
             }
             for f in dropdown_fields
-        }
+        },
+        row_deletable=deletable
     )
 
 
-def create_update_modal(table, id, dropdown_fields):
+def create_update_modal(table, id, dropdown_fields=[], include_parts=False):
+
+    if not dropdown_fields:
+        dropdown_fields = dj_utils.get_dropdown_fields(table)
 
     update_table = create_add_record_table(
         subject.Subject, 'update-' + id + '-table',
         dropdown_fields=dropdown_fields,
-        height='200px', width='800x',
+        height='200px', width='800px',
         is_update=True)
+
+    if include_parts:
+        part_tables = [getattr(table, attr)
+                       for attr in dir(table) if attr[0].isupper()]
+        update_part_tables = []
+        for p in part_tables:
+            update_part_tables.append(
+                html.Div(
+                    create_add_record_table(
+                        p, 'update-' + p.__name__.lower() + '-table',
+                        excluded_fields=table.heading.primary_key,
+                        height='100px', width='300px',
+                        is_update=True, deletable=True),
+                    style={'marginLeft': '1em'}
+                ),
+            )
+        update_tables = [update_table, dbc.Row(update_part_tables)]
+    else:
+        update_tables = [update_table]
 
     update_message_box = dcc.Textarea(
         id='update-' + id + '-message',
         value='Update message:',
-        style={'width': 250, 'height': 200}
+        style={'width': 250, 'height': 200, 'marginLeft': '2em'}
     )
 
     return dbc.Modal(
         [
             dbc.ModalHeader('Update the following record'),
-            dbc.Row([dbc.Col(update_table, width=8),
+            dbc.Row([dbc.Col(
+                        update_tables, width=8),
                      dbc.Col(update_message_box, width=4)]),
             dbc.ModalFooter(
                 [
