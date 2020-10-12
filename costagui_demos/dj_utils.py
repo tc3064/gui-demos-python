@@ -5,6 +5,17 @@ import pdb
 import datetime
 
 
+def get_dropdown_fields(table):
+    graph = table.connection.dependencies
+    graph.load()
+    foreign_keys = graph.parents(table.full_table_name)
+
+    return [list(fk.get('attr_map').items())[0][0]
+            for fk in foreign_keys.values()] + \
+           [f for f in table.heading.names
+            if 'enum' in table.heading.attributes[f].type]
+
+
 def get_options(table, field, context=None):
     '''
     For a given table and field, return the options of this field.
@@ -38,7 +49,7 @@ def get_options(table, field, context=None):
                     parent_field = list(list(graph.parents(key).values())[0]['attr_map'].items())[0][1]
                 except ValueError:
                     parent_table_name = key
-                    parent_field = value['attr_map'][1]
+                    parent_field = [v for v in value['attr_map'].values()][0]
                 break
 
         parent_table = dj.table.lookup_class_name(
