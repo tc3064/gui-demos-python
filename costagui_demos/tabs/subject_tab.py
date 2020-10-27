@@ -11,6 +11,13 @@ from costagui_demos import dj_utils, component_utils
 import datetime
 
 
+# relative variables for subject tables
+subject_primary_key = subject.Subject.heading.primary_key
+subject_field_names = subject.Subject.heading.names
+subject_user_field_names = subject.Subject.User.heading.names
+subject_protocol_field_names = subject.Subject.Protocol.heading.names
+
+
 subject_table = component_utils.create_display_table(
     subject.Subject, 'subject-table', height='800px', width='800px')
 
@@ -28,6 +35,12 @@ add_subject_button = html.Button(
     children='Add a subject record',
     id='add-subject-button', n_clicks=0,
     style=button_style)
+
+add_subject_modal = component_utils.create_modal(
+    subject.Subject, 'subject', include_parts=True,
+    dropdown_fields=['sex', 'subject_strain'],
+    mode='add'
+)
 
 # deletion confirm dialogue
 delete_subject_confirm = dcc.ConfirmDialog(
@@ -48,9 +61,10 @@ update_subject_button = html.Button(
 )
 
 # -------- Pop up window with update table and message ------
-update_subject_modal = component_utils.create_update_modal(
+update_subject_modal = component_utils.create_modal(
     subject.Subject, 'subject', include_parts=True,
-    dropdown_fields=['sex', 'subject_strain']
+    dropdown_fields=['sex', 'subject_strain'],
+    mode='update'
 )
 
 user_filter_dropdown = dcc.Dropdown(
@@ -64,36 +78,36 @@ user_filter_dropdown = dcc.Dropdown(
 )
 
 # -------- part table subject.Subject.User -------------------
-subject_users_table = component_utils.create_display_table(
-    subject.Subject.User, 'subject-users-table',
+subject_user_table = component_utils.create_display_table(
+    subject.Subject.User, 'subject-user-table',
     excluded_fields=['subject_id'], empty_first=True,
     height='200px', width='110px', selectable=False)
 
-add_subject_users_table = component_utils.create_add_record_table(
-    subject.Subject.User, 'add-subject-users-table', n_rows=3,
+add_subject_user_table = component_utils.create_add_record_table(
+    subject.Subject.User, 'add-subject-user-table', n_rows=3,
     dropdown_fields=['user'], excluded_fields=['subject_id'],
     height='200px', width='110px')
 
-add_subject_users_button = html.Button(
+add_subject_user_button = html.Button(
     children='Add subject users',
-    id='add-subject-users-button', n_clicks=0,
+    id='add-subject-user-button', n_clicks=0,
     style=button_style)
 
 
 # -------- part table subject.Subject.Protocol ---------------
-subject_protocols_table = component_utils.create_display_table(
-    subject.Subject.Protocol, 'subject-protocols-table',
+subject_protocol_table = component_utils.create_display_table(
+    subject.Subject.Protocol, 'subject-protocol-table',
     excluded_fields=['subject_id'], empty_first=True,
     height='200px', width='260px', selectable=False)
 
-add_subject_protocols_table = component_utils.create_add_record_table(
-    subject.Subject.Protocol, 'add-subject-protocols-table', n_rows=3,
+add_subject_protocol_table = component_utils.create_add_record_table(
+    subject.Subject.Protocol, 'add-subject-protocol-table', n_rows=3,
     dropdown_fields=['subject_protocol'], excluded_fields=['subject_id'],
     height='200px', width='260px')
 
-add_subject_protocols_button = html.Button(
+add_subject_protocol_button = html.Button(
     children='Add subject protocols',
-    id='add-subject-protocols-button', n_clicks=0,
+    id='add-subject-protocol-button', n_clicks=0,
     style=button_style)
 
 
@@ -117,7 +131,14 @@ delete_subject_message_box = dcc.Textarea(
 )
 
 
-# form subject tab
+# ---------------- state variables -------------------
+
+subject_user_state = html.Div(
+    id='subject-user-state',
+    children=[])
+
+
+# construct subject tab
 subject_tab_contents = html.Div(
     html.Div(
         className="row app-body",
@@ -125,48 +146,18 @@ subject_tab_contents = html.Div(
             html.Div(
                 [
                     html.Div(
-                        add_subject_button,
-                        style={'display': 'block'}
-                    ),
-                    add_subject_message_box,
-                    html.Div(
-                        [
-                            html.H6('Subject'),
-                            add_subject_table
-                        ],
-                        style={'marginRight': '1em',
-                               'display': 'inline-block'}
-                    ),
-                    html.Div(
-                        [
-                            html.H6('Subject.User'),
-                            add_subject_users_table
-                        ],
-                        style={'marginRight': '1em',
-                               'display': 'inline-block'}
-                    ),
-                    html.Div(
-                        [
-                            html.H6('Subject.Protocol'),
-                            add_subject_protocols_table
-                        ],
-                        style={'marginRight': '1em',
-                               'display': 'inline-block'}
-                    )
-                ],
-                style={'marginBottom': '3em'}
-            ),
-
-            html.Div(
-                [
-                    html.Div(
                         [
                             html.Div(
                                 [
-                                    html.Div(delete_subject_button,
-                                             style={'display': 'inline-block'}),
-                                    html.Div(update_subject_button,
-                                             style={'display': 'inline-block'})
+                                    html.Div(
+                                        add_subject_button,
+                                        style={'display': 'inline-block'}),
+                                    html.Div(
+                                        delete_subject_button,
+                                        style={'display': 'inline-block'}),
+                                    html.Div(
+                                        update_subject_button,
+                                        style={'display': 'inline-block'})
                                 ],
                             ),
                             delete_subject_message_box,
@@ -175,27 +166,34 @@ subject_tab_contents = html.Div(
                     user_filter_dropdown,
                     html.Div(
                         [
+                            html.H6('Subject'),
                             subject_table
                         ],
                         style={'marginRight': '1em',
                                'display': 'inline-block'}),
                     html.Div(
                         [
-                            subject_users_table
+                            html.H6('Subject.User'),
+                            subject_user_table
                         ],
                         style={'marginRight': '1em',
                                'display': 'inline-block'}
                     ),
                     html.Div(
                         [
-                            subject_protocols_table
+                            html.H6('Subject.Protocol'),
+                            subject_protocol_table
                         ],
                         style={'marginRight': '1em',
                                'display': 'inline-block'}
                     ),
                 ]
             ),
-            update_subject_modal
+            # modals
+            update_subject_modal,
+            add_subject_modal,
+            # state variables
+            subject_user_state
         ]
 
     )
@@ -203,43 +201,171 @@ subject_tab_contents = html.Div(
 
 
 # ------------------------- subject callback --------------------------------
+
+# callback for user state variable
+@app.callback(
+    Output('subject-user-state', 'children'),
+    [Input('user-filter-dropdown', 'value')]
+)
+def update_user_state(user):
+    return user
+
+
+# callback to update subject table data
+
 @app.callback(
     # Output fields to update
-    [
-        # first argument is the id of a component,
-        # second is the field of that component
-        Output('subject-table', 'data'),
-        Output('add-subject-message-box', 'value')
-    ],
+    # first argument is the id of a component,
+    # second is the field of that component
+    Output('subject-table', 'data'),
     # Input fields that the callback functions responds to
     [
-        Input('add-subject-button', 'n_clicks'),
+        Input('add-subject-close', 'n_clicks'),
         Input('delete-subject-button', 'n_clicks'),
-        Input('update-subject-button', 'n_clicks'),
-        Input('user-filter-dropdown', 'value')
+        Input('update-subject-close', 'n_clicks'),
+        Input('subject-user-state', 'children')
     ],
     # State variables that the callback function uses, but does not
     # respond to whose changes
     [
-        State('add-subject-table', 'data'),
-        State('add-subject-users-table', 'data'),
-        State('add-subject-protocols-table', 'data'),
         State('subject-table', 'data'),
-        State('subject-table', 'selected_rows'),
-        State('add-subject-message-box', 'value')
+        State('subject-table', 'selected_rows')
     ]
 )
 # arguments of the call back function need to be the same order
 # as the Input and State
 def update_subject_table_data(
-        n_clicks_add, n_clicks_delete, n_clicks_update,
-        user, new_subject_data, new_users_data, new_protocols_data,
-        data, selected_rows, add_subject_message):
+        n_clicks_add_close, n_clicks_delete, n_clicks_update_close,
+        user, data, selected_rows):
+
+    ctx = dash.callback_context
+    triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_component == 'delete-subject-button' and selected_rows:
+        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
+        (subject.Subject & subj).delete()
+
+    if user:
+        data = (subject.Subject & (subject.Subject.User & {'user': user})).fetch(
+            as_dict=True)
+    else:
+        data = subject.Subject.fetch(as_dict=True)
+
+    return data
+
+
+@app.callback(
+    [
+        Output('add-subject-modal', 'is_open'),
+        Output('add-subject-table', 'data'),
+        Output('add-subject-user-table', 'data'),
+        Output('add-subject-protocol-table', 'data')
+    ],
+    [
+        Input('add-subject-button', 'n_clicks'),
+        Input('add-subject-close', 'n_clicks'),
+        Input('add-subject-user-add-row-button', 'n_clicks'),
+        Input('add-subject-protocol-add-row-button', 'n_clicks')
+    ],
+    [
+        State('add-subject-modal', 'is_open'),
+        State('subject-table', 'data'),
+        State('subject-table', 'selected_rows'),
+        State('subject-user-table', 'data'),
+        State('subject-protocol-table', 'data'),
+        State('add-subject-table', 'data'),
+        State('add-subject-user-table', 'data'),
+        State('add-subject-protocol-table', 'data'),
+    ],
+)
+def toggle_add_modal(
+        n_open, n_close,
+        n_add_user_row, n_add_protocol_row,
+        is_open, subject_data, selected_rows,
+        subject_user_data, subject_protocol_data,
+        add_subject_data,
+        add_subject_user_data, add_subject_protocol_data):
+
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if triggered_component == 'add-subject-button':
+        if selected_rows:
+            add_subject_data = [subject_data[selected_rows[0]]]
+            add_subject_user_data = subject_user_data
+            add_subject_protocol_data = subject_protocol_data
+        else:
+            add_subject_data = [{k: '' for k in subject_field_names}]
+            add_subject_user_data = [
+                {k: '' for k in subject_user_field_names
+                 if k not in subject_primary_key}]
+            add_subject_protocol_data = [
+                {k: '' for k in subject_protocol_field_names
+                 if k not in subject_primary_key}]
+        add_modal_open = not is_open if n_open or n_close else is_open
 
+    elif triggered_component == 'add-subject-user-add-row-button':
+        add_subject_user_data = add_subject_user_data + \
+            [
+                {k: '' for k in subject_user_field_names
+                 if k not in subject_primary_key}
+            ]
+        add_modal_open = is_open
+
+    elif triggered_component == 'add-subject-protocol-add-row-button':
+        add_subject_protocol_data = add_subject_protocol_data + \
+            [
+                {k: '' for k in subject_protocol_field_names
+                 if k not in subject_primary_key}
+            ]
+        add_modal_open = is_open
+
+    elif triggered_component == 'add-subject-close':
+        add_modal_open = not is_open if n_open or n_close else is_open
+
+    return add_modal_open, add_subject_data, add_subject_user_data, \
+        add_subject_protocol_data
+
+
+@app.callback(
+    [Output('subject-user-table', 'data'),
+     Output('subject-protocol-table', 'data')],
+    [Input('subject-table', 'selected_rows'),
+     State('subject-table', 'data')]
+)
+def load_part_tables(selected_rows, data):
+    if selected_rows:
+        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
+        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
+        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
+    else:
+        user_data = [{c['id'] for c in subject_user_columns}]
+        protocol_data = [{c['id'] for c in subject_protocol_columns}]
+    return user_data, protocol_data
+
+
+@app.callback(
+    Output('add-subject-message', 'value'),
+    [
+        Input('add-subject-confirm', 'n_clicks'),
+        Input('add-subject-close', 'n_clicks')
+    ],
+    [
+        State('add-subject-table', 'data'),
+        State('add-subject-user-table', 'data'),
+        State('add-subject-protocol-table', 'data'),
+        State('add-subject-message', 'value')
+    ]
+)
+def add_subject_record(
+        n_clicks_add, n_clicks_close,
+        new_subject_data, new_users_data, new_protocols_data,
+        add_subject_message):
+
+    ctx = dash.callback_context
+    triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_component == 'add-subject-confirm':
         # insert subject main table
         entry = {k: v for k, v in new_subject_data[0].items() if v != ''}
         users = [
@@ -251,7 +377,7 @@ def update_subject_table_data(
             {**protocol, 'subject_id': new_subject_data[0]['subject_id']}
             for protocol in new_protocols_data if protocol['protocol_assign_date']
         ]
-
+        add_subject_message = 'Add message:'
         try:
             if (subject.Subject & {'subject_id': entry['subject_id']}):
                 add_subject_message = add_subject_message + \
@@ -277,38 +403,10 @@ def update_subject_table_data(
             add_subject_message = add_subject_message + \
                 '\nError inserting into subject.Subject.Protocol:{}'.format(str(e))
 
-        data = subject.Subject.fetch(as_dict=True)
+    elif triggered_component == 'add-subject-close':
+        add_subject_message = 'Add message:'
 
-    if triggered_component == 'delete-subject-button' and selected_rows:
-        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        (subject.Subject & subj).delete()
-        data = subject.Subject.fetch(as_dict=True)
-
-    if triggered_component == 'user-filter-dropdown':
-        if user:
-            data = (subject.Subject & (subject.Subject.User & {'user': user})).fetch(
-                as_dict=True)
-        else:
-            data = subject.Subject.fetch(as_dict=True)
-
-    return data, add_subject_message
-
-
-@app.callback(
-    [Output('subject-users-table', 'data'),
-     Output('subject-protocols-table', 'data')],
-    [Input('subject-table', 'selected_rows'),
-     State('subject-table', 'data')]
-)
-def load_part_tables(selected_rows, data):
-    if selected_rows:
-        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
-        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
-    else:
-        user_data = [{c['id'] for c in subject_users_columns}]
-        protocol_data = [{c['id'] for c in subject_protocols_columns}]
-    return user_data, protocol_data
+    return add_subject_message
 
 
 @app.callback(
@@ -332,26 +430,27 @@ def set_button_enabled_state(selected_rows):
     ],
     [
         Input('update-subject-button', 'n_clicks'),
-        Input('close', 'n_clicks')
+        Input('update-subject-close', 'n_clicks')
     ],
     [
         State('update-subject-modal', 'is_open'),
         State('subject-table', 'data'),
-        State('subject-users-table', 'data'),
-        State('subject-protocols-table', 'data'),
+        State('subject-user-table', 'data'),
+        State('subject-protocol-table', 'data'),
         State('subject-table', 'selected_rows'),
     ],
 )
-def toggle_modal(n1, n2, is_open,
-                 subject_data, subject_users_data, subject_protocols_data,
-                 selected_rows):
+def toggle_update_modal(
+        n1, n2, is_open,
+        subject_data, subject_user_data, subject_protocol_data,
+        selected_rows):
 
     if n1 or n2:
         return not is_open, [subject_data[selected_rows[0]]], \
-            subject_users_data, subject_protocols_data
+            subject_user_data, subject_protocol_data
 
     return is_open, [data[selected_rows[0]]], \
-        subject_users_data, subject_protocols_data
+        subject_user_data, subject_protocol_data
 
 
 subject_fields = subject.Subject.heading.secondary_attributes
@@ -359,8 +458,13 @@ subject_fields = subject.Subject.heading.secondary_attributes
 
 @app.callback(
     Output('update-subject-message', 'value'),
-    [Input('update-subject-confirm', 'n_clicks')],
-    [State('update-subject-table', 'data')],
+    [
+        Input('update-subject-confirm', 'n_clicks')
+    ],
+    [
+        State('update-subject-table', 'data'),
+        State('update-subject-table', 'data')
+    ],
 )
 def update_subject_record(n_clicks, data):
     new = data[0]
@@ -385,6 +489,7 @@ def update_subject_record(n_clicks, data):
             except Exception as e:
                 msg = msg + str(e) + '\n'
     return msg
+
 
 
 if __name__ == '__main__':
