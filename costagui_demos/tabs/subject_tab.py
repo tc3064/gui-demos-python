@@ -404,32 +404,81 @@ def set_button_enabled_state(selected_rows):
     [
         Output('update-subject-modal', 'is_open'),
         Output('update-subject-table', 'data'),
-        Output('update-user-table', 'data'),
-        Output('update-protocol-table', 'data')
+        Output('update-subject-user-table', 'data'),
+        Output('update-subject-protocol-table', 'data')
     ],
     [
         Input('update-subject-button', 'n_clicks'),
-        Input('update-subject-close', 'n_clicks')
+        Input('update-subject-close', 'n_clicks'),
+        Input('update-subject-user-add-row-button', 'n_clicks'),
+        Input('update-subject-protocol-add-row-button', 'n_clicks')
     ],
     [
         State('update-subject-modal', 'is_open'),
         State('subject-table', 'data'),
+        State('subject-table', 'selected_rows'),
         State('subject-user-table', 'data'),
         State('subject-protocol-table', 'data'),
-        State('subject-table', 'selected_rows'),
+        State('update-subject-user-table', 'data'),
+        State('update-subject-protocol-table', 'data'),
     ],
 )
 def toggle_update_modal(
-        n1, n2, is_open,
-        subject_data, subject_user_data, subject_protocol_data,
-        selected_rows):
+        n_open, n_close, n_add_user_row, n_add_protocol_row,
+        is_open,
+        subject_data, selected_rows,
+        subject_user_data, subject_protocol_data,
+        update_subject_user_data, update_subject_protocol_data
+        ):
 
-    if n1 or n2:
-        return not is_open, [subject_data[selected_rows[0]]], \
-            subject_user_data, subject_protocol_data
+    ctx = dash.callback_context
+    triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    return is_open, [data[selected_rows[0]]], \
-        subject_user_data, subject_protocol_data
+    if triggered_component == 'update-subject-user-add-row-button':
+        update_subject_user_data = update_subject_user_data + \
+            [
+                {k: '' for k in subject_user_field_names
+                 if k not in subject_primary_key}
+            ]
+        update_modal_open = is_open
+
+    elif triggered_component == 'update-subject-protocol-add-row-button':
+        update_subject_protocol_data = update_subject_protocol_data + \
+            [
+                {k: '' for k in subject_protocol_field_names
+                 if k not in subject_primary_key}
+            ]
+        update_modal_open = is_open
+
+    elif triggered_component == 'update-subject-button':
+        if not selected_rows:
+            raise ValueError('Update Modal open without a particular row selected')
+
+        update_subject_user_data = subject_user_data
+        update_subject_protocol_data = subject_protocol_data
+
+        update_modal_open = not is_open if n_open or n_close else is_open
+
+    else:
+        update_subject_user_data = [
+            {k: '' for k in subject_user_field_names
+                if k not in subject_primary_key}
+        ]
+        update_subject_protocol_data = [
+            {k: '' for k in subject_protocol_field_names
+                if k not in subject_primary_key}
+        ]
+        update_modal_open = not is_open if n_open or n_close else is_open
+
+    if selected_rows:
+        update_subject_data = [subject_data[selected_rows[0]]]
+    else:
+        update_subject_data = [
+            {k: '' for k in subject_field_names}
+        ]
+
+    return update_modal_open, update_subject_data, \
+        update_subject_user_data, update_subject_protocol_data
 
 
 subject_fields = subject.Subject.heading.secondary_attributes
@@ -442,10 +491,18 @@ subject_fields = subject.Subject.heading.secondary_attributes
     ],
     [
         State('update-subject-table', 'data'),
+        State('update-subject-user-table', 'data'),
+        State('update-subject-protocol-table', 'data')
     ],
 )
-def update_subject_record(n_clicks, data):
-    new = data[0]
+def update_subject_record(
+        n_clicks, add_subject_data,
+        add_subject_user_data, add_subject_protocol_data):
+
+    new = add_subject_data[0]
+    if not new['subject_id']:
+        return 'Update message:'
+
     subj_key = {'subject_id': new['subject_id']}
     old = (subject.Subject & subj_key).fetch1()
 
@@ -466,6 +523,7 @@ def update_subject_record(n_clicks, data):
                 msg = msg + f'Successfully updated field {f} from {old[f]} to {new[f]}!\n'
             except Exception as e:
                 msg = msg + str(e) + '\n'
+    ## TODO: update part tables
     return msg
 
 
