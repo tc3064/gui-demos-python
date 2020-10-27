@@ -21,10 +21,6 @@ subject_protocol_field_names = subject.Subject.Protocol.heading.names
 subject_table = component_utils.create_display_table(
     subject.Subject, 'subject-table', height='800px', width='800px')
 
-add_subject_table = component_utils.create_add_record_table(
-    subject.Subject, 'add-subject-table',
-    dropdown_fields=['sex', 'subject_strain'], height='200px', width='800px')
-
 
 button_style = {
     'marginRight': '1em',
@@ -83,32 +79,12 @@ subject_user_table = component_utils.create_display_table(
     excluded_fields=['subject_id'], empty_first=True,
     height='200px', width='110px', selectable=False)
 
-add_subject_user_table = component_utils.create_add_record_table(
-    subject.Subject.User, 'add-subject-user-table', n_rows=3,
-    dropdown_fields=['user'], excluded_fields=['subject_id'],
-    height='200px', width='110px')
-
-add_subject_user_button = html.Button(
-    children='Add subject users',
-    id='add-subject-user-button', n_clicks=0,
-    style=button_style)
-
 
 # -------- part table subject.Subject.Protocol ---------------
 subject_protocol_table = component_utils.create_display_table(
     subject.Subject.Protocol, 'subject-protocol-table',
     excluded_fields=['subject_id'], empty_first=True,
     height='200px', width='260px', selectable=False)
-
-add_subject_protocol_table = component_utils.create_add_record_table(
-    subject.Subject.Protocol, 'add-subject-protocol-table', n_rows=3,
-    dropdown_fields=['subject_protocol'], excluded_fields=['subject_id'],
-    height='200px', width='260px')
-
-add_subject_protocol_button = html.Button(
-    children='Add subject protocols',
-    id='add-subject-protocol-button', n_clicks=0,
-    style=button_style)
 
 
 # ----------------------- Message boxes ----------------------------------
@@ -323,6 +299,9 @@ def toggle_add_modal(
     elif triggered_component == 'add-subject-close':
         add_modal_open = not is_open if n_open or n_close else is_open
 
+    else:
+        add_modal_open = is_open
+
     return add_modal_open, add_subject_data, add_subject_user_data, \
         add_subject_protocol_data
 
@@ -339,8 +318,8 @@ def load_part_tables(selected_rows, data):
         user_data = (subject.Subject.User & subj).fetch(as_dict=True)
         protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
     else:
-        user_data = [{c['id'] for c in subject_user_columns}]
-        protocol_data = [{c['id'] for c in subject_protocol_columns}]
+        user_data = [{f: '' for f in subject_user_field_names}]
+        protocol_data = [{f: '' for f in subject_protocol_field_names}]
     return user_data, protocol_data
 
 
@@ -463,7 +442,6 @@ subject_fields = subject.Subject.heading.secondary_attributes
     ],
     [
         State('update-subject-table', 'data'),
-        State('update-subject-table', 'data')
     ],
 )
 def update_subject_record(n_clicks, data):
@@ -489,7 +467,6 @@ def update_subject_record(n_clicks, data):
             except Exception as e:
                 msg = msg + str(e) + '\n'
     return msg
-
 
 
 if __name__ == '__main__':
