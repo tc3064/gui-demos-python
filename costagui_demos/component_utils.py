@@ -132,57 +132,69 @@ def create_add_record_table(table, table_id,
     )
 
 
-def create_update_modal(table, id, dropdown_fields=[], include_parts=False):
+def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add'):
 
     if not dropdown_fields:
         dropdown_fields = dj_utils.get_dropdown_fields(table)
 
-    update_table = create_add_record_table(
-        subject.Subject, 'update-' + id + '-table',
+    master_table = create_add_record_table(
+        table, f'{mode}-{id}-table',
         dropdown_fields=dropdown_fields,
         height='200px', width='800px',
-        is_update=True)
+        is_update=mode == 'update')
 
     if include_parts:
-        part_tables = [getattr(table, attr)
-                       for attr in dir(table) if attr[0].isupper()]
-        update_part_tables = []
-        for p in part_tables:
-            update_part_tables.append(
+        p_tables = [getattr(table, attr)
+                    for attr in dir(table) if attr[0].isupper()]
+        part_tables = []
+        for p in p_tables:
+            part_tables.append(
                 html.Div(
-                    create_add_record_table(
-                        p, 'update-' + p.__name__.lower() + '-table',
-                        excluded_fields=table.heading.primary_key,
-                        height='100px', width='300px',
-                        is_update=True, deletable=True),
+                    [
+                        html.Button(
+                            'Add a row',
+                            id=f'{mode}-{table.__name__.lower()}-{p.__name__.lower()}-add-row-button',
+                            style={
+                                    'display': 'block',
+                                    'width': '150px',
+                                    'height': '40px',
+                                    'marginBottom': '0.5em'
+                                }
+                            ),
+                        create_add_record_table(
+                            p, f'{mode}-{table.__name__.lower()}-{p.__name__.lower()}-table',
+                            excluded_fields=table.heading.primary_key,
+                            height='100px', width='300px',
+                            is_update=mode == 'update', deletable=True),
+                    ],
                     style={'marginLeft': '1em'}
                 ),
             )
-        update_tables = [update_table, dbc.Row(update_part_tables)]
+        tables = [master_table, dbc.Row(part_tables)]
     else:
-        update_tables = [update_table]
+        tables = [master_table]
 
-    update_message_box = dcc.Textarea(
-        id='update-' + id + '-message',
-        value='Update message:',
+    message_box = dcc.Textarea(
+        id=f'{mode}-{id}-message',
+        value=f'{mode.capitalize()} message:',
         style={'width': 250, 'height': 200, 'marginLeft': '2em'}
     )
 
     return dbc.Modal(
         [
-            dbc.ModalHeader('Update the following record'),
+            dbc.ModalHeader(f'{mode.capitalize()} {table.__name__} record'),
             dbc.Row([dbc.Col(
-                        update_tables, width=8),
-                     dbc.Col(update_message_box, width=4)]),
+                        tables, width=8),
+                     dbc.Col(message_box, width=4)]),
             dbc.ModalFooter(
                 [
-                    dbc.Button('Update record', id='update-' + id + '-confirm',
+                    dbc.Button(f'{mode.capitalize()} record', id=f'{mode}-{id}-confirm',
                                className='ml-auto'),
-                    dbc.Button('Close', id='close', className='ml-auto')
+                    dbc.Button('Close', id=f'{mode}-{id}-close', className='ml-auto')
                 ]
             ),
         ],
-        id='update-' + id + '-modal',
+        id=f'{mode}-{id}-modal',
         size='xl',
     )
 
