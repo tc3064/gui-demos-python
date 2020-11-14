@@ -143,7 +143,7 @@ def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add')
         table, f'{mode}-{id}-table',
         dropdown_fields=dropdown_fields,
         height='200px', width='800px',
-        pk_editable=mode == 'update')
+        pk_editable=mode != 'update')
 
     if include_parts:
         p_tables = [getattr(table, attr)
