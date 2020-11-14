@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from costagui_demos.app import app
 from costagui_demos.dj_tables import lab, subject, hardware
-from costagui_demos import dj_utils, component_utils
+from costagui_demos import dj_utils, component_utils, callback_utils
 import datetime
 
 
@@ -318,8 +318,10 @@ def load_part_tables(selected_rows, data):
         user_data = (subject.Subject.User & subj).fetch(as_dict=True)
         protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
     else:
-        user_data = [{f: '' for f in subject_user_field_names}]
-        protocol_data = [{f: '' for f in subject_protocol_field_names}]
+        user_data = [
+            {f: '' for f in subject_user_field_names}]
+        protocol_data = [
+            {f: '' for f in subject_protocol_field_names}]
     return user_data, protocol_data
 
 
@@ -437,16 +439,18 @@ def toggle_update_modal(
     if triggered_component == 'update-subject-user-add-row-button':
         update_subject_user_data = update_subject_user_data + \
             [
-                {k: '' for k in subject_user_field_names
-                 if k not in subject_primary_key}
+                {k: ('' if k not in subject_primary_key
+                     else subject_data[selected_rows[0]][k])
+                 for k in subject_user_field_names}
             ]
         update_modal_open = is_open
 
     elif triggered_component == 'update-subject-protocol-add-row-button':
         update_subject_protocol_data = update_subject_protocol_data + \
             [
-                {k: '' for k in subject_protocol_field_names
-                 if k not in subject_primary_key}
+                {k: ('' if k not in subject_primary_key
+                     else subject_data[selected_rows[0]][k])
+                 for k in subject_protocol_field_names}
             ]
         update_modal_open = is_open
 
@@ -461,12 +465,10 @@ def toggle_update_modal(
 
     else:
         update_subject_user_data = [
-            {k: '' for k in subject_user_field_names
-                if k not in subject_primary_key}
+            {k: '' for k in subject_user_field_names}
         ]
         update_subject_protocol_data = [
-            {k: '' for k in subject_protocol_field_names
-                if k not in subject_primary_key}
+            {k: '' for k in subject_protocol_field_names}
         ]
         update_modal_open = not is_open if n_open or n_close else is_open
 
@@ -496,10 +498,10 @@ subject_fields = subject.Subject.heading.secondary_attributes
     ],
 )
 def update_subject_record(
-        n_clicks, add_subject_data,
-        add_subject_user_data, add_subject_protocol_data):
+        n_clicks, update_subject_data,
+        update_subject_user_data, update_subject_protocol_data):
 
-    new = add_subject_data[0]
+    new = update_subject_data[0]
     if not new['subject_id']:
         return 'Update message:'
 
@@ -520,10 +522,17 @@ def update_subject_record(
 
             try:
                 dj.Table._update(subject.Subject & subj_key, f, new[f])
-                msg = msg + f'Successfully updated field {f} from {old[f]} to {new[f]}!\n'
+                msg = msg + f'Successfully updated field {f}' + \
+                    'from {old[f]} to {new[f]}!\n'
             except Exception as e:
                 msg = msg + str(e) + '\n'
-    ## TODO: update part tables
+
+    msg = callback_utils.update_part_table(
+        subject.Subject.User, subj_key, update_subject_user_data, msg)
+
+    msg = callback_utils.update_part_table(
+        subject.Subject.Protocol, subj_key, update_subject_protocol_data, msg)
+
     return msg
 
 
