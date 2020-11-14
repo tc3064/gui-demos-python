@@ -3,12 +3,15 @@ import datajoint as dj
 import pdb
 
 
-def clean_gui_data(table, data):
+def clean_gui_data(table, data, master_key=None):
 
     attrs = table.heading.attributes
     clean_data = []
     for d in data:
-        if set(d.values()) != '':
+        if (not master_key and set(d.values()) != {''}) or \
+                (master_key and
+                 set([v for k, v in d.items()
+                      if k in (set(d.keys()) - set(master_key.keys()))]) != {''}):
 
             for k, v in d.items():
                 if attrs[k].type == 'date':
@@ -37,7 +40,7 @@ def update_part_table(part_table, master_key, new_data, msg=''):
     pks = part_table.heading.primary_key
 
     # clean up the new data
-    new_data = clean_gui_data(part_table, new_data)
+    new_data = clean_gui_data(part_table, new_data, master_key)
 
     if type(new_data) == str:
         # return the error message

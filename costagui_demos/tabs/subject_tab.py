@@ -193,26 +193,28 @@ def update_user_state(user):
     # Output fields to update
     # first argument is the id of a component,
     # second is the field of that component
-    Output('subject-table', 'data'),
+    [Output('subject-table', 'data'),
+     Output('subject-user-table', 'data'),
+     Output('subject-protocol-table', 'data')],
     # Input fields that the callback functions responds to
     [
         Input('add-subject-close', 'n_clicks'),
         Input('delete-subject-button', 'n_clicks'),
         Input('update-subject-close', 'n_clicks'),
-        Input('subject-user-state', 'children')
+        Input('subject-user-state', 'children'),
+        Input('subject-table', 'selected_rows')
     ],
     # State variables that the callback function uses, but does not
     # respond to whose changes
     [
         State('subject-table', 'data'),
-        State('subject-table', 'selected_rows')
     ]
 )
 # arguments of the call back function need to be the same order
 # as the Input and State
 def update_subject_table_data(
         n_clicks_add_close, n_clicks_delete, n_clicks_update_close,
-        user, data, selected_rows):
+        user, selected_rows, data):
 
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
@@ -227,7 +229,17 @@ def update_subject_table_data(
     else:
         data = subject.Subject.fetch(as_dict=True)
 
-    return data
+    if selected_rows:
+        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
+        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
+        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
+    else:
+        user_data = [
+            {f: '' for f in subject_user_field_names}]
+        protocol_data = [
+            {f: '' for f in subject_protocol_field_names}]
+
+    return data, user_data, protocol_data
 
 
 @app.callback(
@@ -304,25 +316,6 @@ def toggle_add_modal(
 
     return add_modal_open, add_subject_data, add_subject_user_data, \
         add_subject_protocol_data
-
-
-@app.callback(
-    [Output('subject-user-table', 'data'),
-     Output('subject-protocol-table', 'data')],
-    [Input('subject-table', 'selected_rows'),
-     State('subject-table', 'data')]
-)
-def load_part_tables(selected_rows, data):
-    if selected_rows:
-        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
-        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
-    else:
-        user_data = [
-            {f: '' for f in subject_user_field_names}]
-        protocol_data = [
-            {f: '' for f in subject_protocol_field_names}]
-    return user_data, protocol_data
 
 
 @app.callback(
