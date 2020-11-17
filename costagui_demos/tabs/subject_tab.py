@@ -41,7 +41,7 @@ add_subject_modal = component_utils.create_modal(
 # deletion confirm dialogue
 delete_subject_confirm = dcc.ConfirmDialog(
     id='delete-subject-confirm',
-    message='Are you sure you want to delete the record?',
+    message='Are you sure to delete the record?',
 ),
 
 delete_subject_button = html.Button(
@@ -165,11 +165,13 @@ subject_tab_contents = html.Div(
                     ),
                 ]
             ),
+            # confirmation dialogue
+            html.Div(delete_subject_confirm),
             # modals
             update_subject_modal,
             add_subject_modal,
             # state variables
-            subject_user_state
+            subject_user_state,
         ]
 
     )
@@ -187,6 +189,15 @@ def update_user_state(user):
     return user
 
 
+@app.callback(
+    Output('delete-subject-confirm', 'displayed'),
+    [Input('delete-subject-button', 'n_clicks')])
+def display_confirm(n_clicks):
+    if n_clicks:
+        return True
+    return False
+
+
 # callback to update subject table data
 
 @app.callback(
@@ -195,11 +206,12 @@ def update_user_state(user):
     # second is the field of that component
     [Output('subject-table', 'data'),
      Output('subject-user-table', 'data'),
-     Output('subject-protocol-table', 'data')],
+     Output('subject-protocol-table', 'data'),
+     Output('delete-subject-message-box', 'value')],
     # Input fields that the callback functions responds to
     [
         Input('add-subject-close', 'n_clicks'),
-        Input('delete-subject-button', 'n_clicks'),
+        Input('delete-subject-confirm', 'submit_n_clicks'),
         Input('update-subject-close', 'n_clicks'),
         Input('subject-user-state', 'children'),
         Input('subject-table', 'selected_rows')
@@ -216,12 +228,19 @@ def update_subject_table_data(
         n_clicks_add_close, n_clicks_delete, n_clicks_update_close,
         user, selected_rows, data):
 
+    delete_message = 'Delete subject message:\n'
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if triggered_component == 'delete-subject-button' and selected_rows:
+    if triggered_component == 'delete-subject-confirm' and selected_rows:
         subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        (subject.Subject & subj).delete()
+        try:
+            (subject.Subject & subj).delete()
+            delete_message = delete_message + \
+                f'Successfully deleted record {subj}!'
+        except Exception as e:
+            delete_message = delete_message + \
+                f'Error in deleting record {subj}: {str(e)}.'
 
     if user:
         data = (subject.Subject & (subject.Subject.User & {'user': user})).fetch(
@@ -239,7 +258,7 @@ def update_subject_table_data(
         protocol_data = [
             {f: '' for f in subject_protocol_field_names}]
 
-    return data, user_data, protocol_data
+    return data, user_data, protocol_data, delete_message
 
 
 @app.callback(
