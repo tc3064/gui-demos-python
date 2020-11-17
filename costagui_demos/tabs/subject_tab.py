@@ -534,8 +534,8 @@ def update_subject_record(
 
             try:
                 dj.Table._update(subject.Subject & subj_key, f, new[f])
-                msg = msg + f'Successfully updated field {f}' + \
-                    'from {old[f]} to {new[f]}!\n'
+                msg = msg + f'Successfully updated field {f} ' + \
+                    f'from {old[f]} to {new[f]}!\n'
             except Exception as e:
                 msg = msg + str(e) + '\n'
 
