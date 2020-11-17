@@ -75,12 +75,13 @@ def create_display_table(table, table_id, height='900px', width='1200px',
     )
 
 
-def create_add_record_table(table, table_id,
-                            dropdown_fields=[], excluded_fields=[],
-                            height='150px', width='1200px',
-                            n_rows=1,
-                            is_update=False,
-                            deletable=False):
+def create_edit_record_table(
+        table, table_id,
+        dropdown_fields=[], excluded_fields=[],
+        height='150px', width='1200px',
+        n_rows=1,
+        pk_editable=False,
+        deletable=False):
 
     if not dropdown_fields:
         dropdown_fields = dj_utils.get_dropdown_fields(table)
@@ -109,7 +110,7 @@ def create_add_record_table(table, table_id,
                 c.update(presentation="dropdown")
 
     for c in columns:
-        if c['name'] in heading.primary_key and is_update:
+        if c['name'] in heading.primary_key and not pk_editable:
             c.update(editable=False)
         else:
             c.update(editable=True)
@@ -119,6 +120,7 @@ def create_add_record_table(table, table_id,
         columns=columns,
         data=[{c['id']: dj_utils.get_default(table, c['id'])
               for c in columns}] * n_rows,
+        persistence=True,
         **table_style,
         dropdown={
             f:
@@ -137,11 +139,11 @@ def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add')
     if not dropdown_fields:
         dropdown_fields = dj_utils.get_dropdown_fields(table)
 
-    master_table = create_add_record_table(
+    master_table = create_edit_record_table(
         table, f'{mode}-{id}-table',
         dropdown_fields=dropdown_fields,
         height='200px', width='800px',
-        is_update=mode == 'update')
+        pk_editable=mode != 'update')
 
     if include_parts:
         p_tables = [getattr(table, attr)
@@ -161,11 +163,11 @@ def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add')
                                     'marginBottom': '0.5em'
                                 }
                             ),
-                        create_add_record_table(
+                        create_edit_record_table(
                             p, f'{mode}-{table.__name__.lower()}-{p.__name__.lower()}-table',
                             excluded_fields=table.heading.primary_key,
                             height='100px', width='300px',
-                            is_update=mode == 'update', deletable=True),
+                            pk_editable=True, deletable=True),
                     ],
                     style={'marginLeft': '1em'}
                 ),

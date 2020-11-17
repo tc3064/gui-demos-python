@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from costagui_demos.app import app
 from costagui_demos.dj_tables import lab, subject, hardware
-from costagui_demos import dj_utils, component_utils
+from costagui_demos import dj_utils, component_utils, callback_utils
 import datetime
 
 
@@ -41,7 +41,7 @@ add_subject_modal = component_utils.create_modal(
 # deletion confirm dialogue
 delete_subject_confirm = dcc.ConfirmDialog(
     id='delete-subject-confirm',
-    message='Are you sure you want to delete the record?',
+    message='Are you sure to delete the record?',
 ),
 
 delete_subject_button = html.Button(
@@ -165,11 +165,13 @@ subject_tab_contents = html.Div(
                     ),
                 ]
             ),
+            # confirmation dialogue
+            html.Div(delete_subject_confirm),
             # modals
             update_subject_modal,
             add_subject_modal,
             # state variables
-            subject_user_state
+            subject_user_state,
         ]
 
     )
@@ -187,39 +189,58 @@ def update_user_state(user):
     return user
 
 
+@app.callback(
+    Output('delete-subject-confirm', 'displayed'),
+    [Input('delete-subject-button', 'n_clicks')])
+def display_confirm(n_clicks):
+    if n_clicks:
+        return True
+    return False
+
+
 # callback to update subject table data
 
 @app.callback(
     # Output fields to update
     # first argument is the id of a component,
     # second is the field of that component
-    Output('subject-table', 'data'),
+    [Output('subject-table', 'data'),
+     Output('subject-user-table', 'data'),
+     Output('subject-protocol-table', 'data'),
+     Output('delete-subject-message-box', 'value')],
     # Input fields that the callback functions responds to
     [
         Input('add-subject-close', 'n_clicks'),
-        Input('delete-subject-button', 'n_clicks'),
+        Input('delete-subject-confirm', 'submit_n_clicks'),
         Input('update-subject-close', 'n_clicks'),
-        Input('subject-user-state', 'children')
+        Input('subject-user-state', 'children'),
+        Input('subject-table', 'selected_rows')
     ],
     # State variables that the callback function uses, but does not
     # respond to whose changes
     [
         State('subject-table', 'data'),
-        State('subject-table', 'selected_rows')
     ]
 )
 # arguments of the call back function need to be the same order
 # as the Input and State
 def update_subject_table_data(
         n_clicks_add_close, n_clicks_delete, n_clicks_update_close,
-        user, data, selected_rows):
+        user, selected_rows, data):
 
+    delete_message = 'Delete subject message:\n'
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if triggered_component == 'delete-subject-button' and selected_rows:
+    if triggered_component == 'delete-subject-confirm' and selected_rows:
         subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        (subject.Subject & subj).delete()
+        try:
+            (subject.Subject & subj).delete()
+            delete_message = delete_message + \
+                f'Successfully deleted record {subj}!'
+        except Exception as e:
+            delete_message = delete_message + \
+                f'Error in deleting record {subj}: {str(e)}.'
 
     if user:
         data = (subject.Subject & (subject.Subject.User & {'user': user})).fetch(
@@ -227,7 +248,17 @@ def update_subject_table_data(
     else:
         data = subject.Subject.fetch(as_dict=True)
 
-    return data
+    if selected_rows:
+        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
+        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
+        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
+    else:
+        user_data = [
+            {f: '' for f in subject_user_field_names}]
+        protocol_data = [
+            {f: '' for f in subject_protocol_field_names}]
+
+    return data, user_data, protocol_data, delete_message
 
 
 @app.callback(
@@ -304,23 +335,6 @@ def toggle_add_modal(
 
     return add_modal_open, add_subject_data, add_subject_user_data, \
         add_subject_protocol_data
-
-
-@app.callback(
-    [Output('subject-user-table', 'data'),
-     Output('subject-protocol-table', 'data')],
-    [Input('subject-table', 'selected_rows'),
-     State('subject-table', 'data')]
-)
-def load_part_tables(selected_rows, data):
-    if selected_rows:
-        subj = {'subject_id': data[selected_rows[0]]['subject_id']}
-        user_data = (subject.Subject.User & subj).fetch(as_dict=True)
-        protocol_data = (subject.Subject.Protocol & subj).fetch(as_dict=True)
-    else:
-        user_data = [{f: '' for f in subject_user_field_names}]
-        protocol_data = [{f: '' for f in subject_protocol_field_names}]
-    return user_data, protocol_data
 
 
 @app.callback(
@@ -437,16 +451,18 @@ def toggle_update_modal(
     if triggered_component == 'update-subject-user-add-row-button':
         update_subject_user_data = update_subject_user_data + \
             [
-                {k: '' for k in subject_user_field_names
-                 if k not in subject_primary_key}
+                {k: ('' if k not in subject_primary_key
+                     else subject_data[selected_rows[0]][k])
+                 for k in subject_user_field_names}
             ]
         update_modal_open = is_open
 
     elif triggered_component == 'update-subject-protocol-add-row-button':
         update_subject_protocol_data = update_subject_protocol_data + \
             [
-                {k: '' for k in subject_protocol_field_names
-                 if k not in subject_primary_key}
+                {k: ('' if k not in subject_primary_key
+                     else subject_data[selected_rows[0]][k])
+                 for k in subject_protocol_field_names}
             ]
         update_modal_open = is_open
 
@@ -461,12 +477,10 @@ def toggle_update_modal(
 
     else:
         update_subject_user_data = [
-            {k: '' for k in subject_user_field_names
-                if k not in subject_primary_key}
+            {k: '' for k in subject_user_field_names}
         ]
         update_subject_protocol_data = [
-            {k: '' for k in subject_protocol_field_names
-                if k not in subject_primary_key}
+            {k: '' for k in subject_protocol_field_names}
         ]
         update_modal_open = not is_open if n_open or n_close else is_open
 
@@ -496,10 +510,10 @@ subject_fields = subject.Subject.heading.secondary_attributes
     ],
 )
 def update_subject_record(
-        n_clicks, add_subject_data,
-        add_subject_user_data, add_subject_protocol_data):
+        n_clicks, update_subject_data,
+        update_subject_user_data, update_subject_protocol_data):
 
-    new = add_subject_data[0]
+    new = update_subject_data[0]
     if not new['subject_id']:
         return 'Update message:'
 
@@ -520,10 +534,17 @@ def update_subject_record(
 
             try:
                 dj.Table._update(subject.Subject & subj_key, f, new[f])
-                msg = msg + f'Successfully updated field {f} from {old[f]} to {new[f]}!\n'
+                msg = msg + f'Successfully updated field {f} ' + \
+                    f'from {old[f]} to {new[f]}!\n'
             except Exception as e:
                 msg = msg + str(e) + '\n'
-    ## TODO: update part tables
+
+    msg = callback_utils.update_part_table(
+        subject.Subject.User, subj_key, update_subject_user_data, msg)
+
+    msg = callback_utils.update_part_table(
+        subject.Subject.Protocol, subj_key, update_subject_protocol_data, msg)
+
     return msg
 
 

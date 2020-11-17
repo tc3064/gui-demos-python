@@ -19,7 +19,7 @@ hardware_table = component_utils.create_display_table(
 )
 
 # ------------------------- add hardware table ------------------------------
-add_hardware_table = component_utils.create_add_record_table(
+add_hardware_table = component_utils.create_edit_record_table(
     hardware.Computer, 'add-hardware-table', width=width,
     height=height
 )
@@ -158,7 +158,7 @@ def update_current_table(*args):
             component_utils.create_display_table(
                 current_table, 'hardware-table', width=width
             ), \
-            component_utils.create_add_record_table(
+            component_utils.create_edit_record_table(
                 current_table, 'add-hardware-table', width=width,
                 height=height
             )
@@ -167,7 +167,7 @@ def update_current_table(*args):
             component_utils.create_display_table(
                 hardware.Computer, 'hardware-table', width=width
             ), \
-            component_utils.create_add_record_table(
+            component_utils.create_edit_record_table(
                 hardware.Computer, 'add-hardware-table', width=width,
                 height=height
             )
