@@ -3,35 +3,68 @@ import datajoint as dj
 import pdb
 
 
+def clean_single_gui_record(d, attrs, master_key=None):
+
+    if (not master_key and set(d.values()) != {''}) or \
+            (master_key and
+                set([v for k, v in d.items()
+                    if k in (set(d.keys()) - set(master_key.keys()))]) != {''}):
+
+        for k, v in d.items():
+
+            if 'varchar' not in attrs[k].type and v == '':
+                d[k] = None
+
+            elif not d[k]:
+                continue
+
+            elif attrs[k].type == 'date':
+                try:
+                    d[k] = datetime.datetime.strptime(v, '%Y-%m-%d').date()
+                except ValueError:
+                    return f'Invalid date value {v}'
+
+            elif attrs[k].type == 'datetime':
+                try:
+                    d[k] = datetime.datetime.strptime(v, '%Y-%m-%d %H-%M-%S')
+                except ValueError:
+                    return f'Invalid datetime value {v}'
+
+            elif 'int' in attrs[k].type:
+                try:
+                    d[k] = int(v)
+                except ValueError:
+                    return f'Invalid int value {v}'
+
+            elif [t for t in ['float', 'double', 'decimal'] if t in attrs[k].type]:
+                try:
+                    d[k] = float(v)
+                except ValueError:
+                    return f'Invalid numeric value {v}'
+
+        return d
+
+    else:
+        return None
+
+
 def clean_gui_data(table, data, master_key=None):
 
     attrs = table.heading.attributes
+
     clean_data = []
     for d in data:
-        if (not master_key and set(d.values()) != {''}) or \
-                (master_key and
-                 set([v for k, v in d.items()
-                      if k in (set(d.keys()) - set(master_key.keys()))]) != {''}):
-
-            for k, v in d.items():
-                if attrs[k].type == 'date':
-                    try:
-                        d[k] = datetime.datetime.strptime(v, '%Y-%m-%d').date()
-                    except ValueError:
-                        return f'Invalid date value {v}'
-
-                if attrs[k].type == 'datetime':
-                    try:
-                        d[k] = datetime.datetime.strptime(v, '%Y-%m-%d %H-%M-%S')
-                    except ValueError:
-                        return f'Invalid datetime value {v}'
-                if 'varchar' not in attrs[k].type and v == '':
-                    d[k] = None
-
-            else:
-                clean_data.append(d)
+        clean_d = clean_single_gui_record(d, attrs, master_key=master_key)
+        if d:
+            clean_data.append(d)
 
     return clean_data
+
+
+def update_master_table(master_table, master_key, new_data, msg=''):
+
+    new_data = clean_gui_data(master_table, new_data)
+    pass
 
 
 def update_part_table(part_table, master_key, new_data, msg=''):

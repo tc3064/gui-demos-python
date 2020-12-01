@@ -30,8 +30,11 @@ table_style_template = dict(
         'fontWeight': 'bold'})
 
 
-def create_display_table(table, table_id, height='900px', width='1200px',
+def create_display_table(table, table_id=None, height='900px', width='1200px',
                          selectable=True, excluded_fields=[], empty_first=False):
+
+    if not table_id:
+        table_id = lower(table.__name__)
 
     table_style = copy.deepcopy(table_style_template)
     table_style.update(
