@@ -11,7 +11,7 @@ from dj_tables import lab, subject, hardware
 import dj_utils
 from costagui_demos.app import app
 
-from tabs import subject_tab, hardware_tab
+from tabs import subject_tab, hardware_tab_from_template
 
 # ========================= Construct webpage layout ========================
 app.layout = html.Div(
@@ -50,7 +50,7 @@ def render_content(tab):
             html.H3('Session content')
         ])
     elif tab == 'Hardware':
-        return hardware_tab.hardware_tab_contents
+        return hardware_tab_from_template.hardware_tab_contents
 
 
 # ========================= Run server =========================

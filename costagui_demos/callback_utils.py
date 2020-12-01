@@ -26,9 +26,15 @@ def clean_single_gui_record(d, attrs, master_key=None):
 
             elif attrs[k].type == 'datetime':
                 try:
-                    d[k] = datetime.datetime.strptime(v, '%Y-%m-%d %H-%M-%S')
+                    d[k] = datetime.datetime.strptime(v, '%Y-%m-%d %H:%M:%S')
                 except ValueError:
                     return f'Invalid datetime value {v}'
+
+            elif attrs[k].type == 'timestamp':
+                try:
+                    d[k] = datetime.datetime.strptime(v, '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    return f'Invalid timestamp value {v}'
 
             elif 'int' in attrs[k].type:
                 try:
@@ -61,10 +67,35 @@ def clean_gui_data(table, data, master_key=None):
     return clean_data
 
 
-def update_master_table(master_table, master_key, new_data, msg=''):
+def update_table(table, new_data, pk=None, msg='Update message:\n'):
 
-    new_data = clean_gui_data(master_table, new_data)
-    pass
+    if not pk:
+        pks = table.heading.primary_key
+        if type(new_data) != dict:
+            raise TypeError('new data record has to be a single dictionary.')
+
+        pk = {k: v for k, v in new_data.items() if k in pks}
+
+    if not(table & pk):
+        return msg
+    else:
+        new = clean_single_gui_record(
+            new_data, table.heading.attributes)
+        if type(new) == str:
+            return msg + new + '\n'
+
+        old = (table & pk).fetch1()
+
+        for f in table.heading.secondary_attributes:
+            if new[f] != old[f]:
+                try:
+                    dj.Table._update(table & pk, f, new[f])
+                    msg = msg + f'Successfully updated field {f} ' + \
+                        f'from {old[f]} to {new[f]}!\n'
+                except Exception as e:
+                    msg = msg + str(e) + '\n'
+
+    return msg
 
 
 def update_part_table(part_table, master_key, new_data, msg=''):

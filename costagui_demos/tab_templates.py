@@ -65,7 +65,7 @@ class TableBlock:
 
         self.delete_message_box = dcc.Textarea(
             id=f'delete-{self.table_name}-message-box',
-            value=f'Delete {self.table_name} message:',
+            value=f'Delete {self.table.__name__} record message:',
             style=messagebox_style
         )
 
@@ -77,48 +77,46 @@ class TableBlock:
         if self.app is not None and hasattr(self, 'callbacks'):
             self.callbacks(self.app)
 
-    def create_default_layout(self):
         self.layout = html.Div(
-            html.Div(
-                className="row app-body",
-                children=[
-                    html.Div(
-                        [
-                            html.Div(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Div(
-                                                self.add_button,
-                                                style={'display': 'inline-block'}),
-                                            html.Div(
-                                                self.delete_button,
-                                                style={'display': 'inline-block'}),
-                                            html.Div(
-                                                self.update_button,
-                                                style={'display': 'inline-block'})
-                                        ],
-                                    ),
-                                    self.delete_message_box,
-                                ]
-                            ),
+            className="row app-body",
+            children=[
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            self.add_button,
+                                            style={'display': 'inline-block'}),
+                                        html.Div(
+                                            self.delete_button,
+                                            style={'display': 'inline-block'}),
+                                        html.Div(
+                                            self.update_button,
+                                            style={'display': 'inline-block'})
+                                    ],
+                                ),
+                                self.delete_message_box,
+                            ]
+                        ),
 
-                            html.Div(
-                                [
-                                    html.H6(f'{self.table.__name__}'),
-                                    self.display_table
-                                ],
-                                style={'marginRight': '1em',
-                                       'display': 'inline-block'}),
-                        ]
-                    ),
-                    # confirmation dialogue
-                    html.Div(self.delete_confirm),
-                    # modals
-                    self.update_modal,
-                    self.add_modal
-                ]
-            )
+                        html.Div(
+                            [
+                                html.H6(f'{self.table.__name__}'),
+                                self.display_table
+                            ],
+                            style={'marginRight': '1em',
+                                'display': 'inline-block'}
+                        ),
+                    ]
+                ),
+                # confirmation dialogue
+                html.Div(self.delete_confirm),
+                # modals
+                self.update_modal,
+                self.add_modal
+            ]
         )
 
     def callbacks(self, app):
@@ -165,7 +163,7 @@ class TableBlock:
                 n_clicks_add_close, n_clicks_delete, n_clicks_update_close,
                 selected_rows, data):
 
-            delete_message = 'Delete subject message:\n'
+            delete_message = f'Delete {self.table.__name__} record message:\n'
             ctx = dash.callback_context
             triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
 

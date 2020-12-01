@@ -94,12 +94,6 @@ messagebox_style = {
     'marginBottom': '1em',
     'display': 'block'}
 
-add_subject_message_box = dcc.Textarea(
-    id='add-subject-message-box',
-    value='Add subject message:',
-    style=messagebox_style
-)
-
 delete_subject_message_box = dcc.Textarea(
     id='delete-subject-message-box',
     value='Delete subject message:',
@@ -521,19 +515,10 @@ def update_subject_record(
     old = (subject.Subject & subj_key).fetch1()
 
     msg = 'Update message:\n'
-    for f in subject_fields:
+    for f in table.heading.secondary_attributes:
         if new[f] != old[f] and not (old is None and new == ''):
-            if type(old[f]) == datetime.date and \
-                    old[f] == datetime.datetime.strptime(
-                        new[f], '%Y-%m-%d').date():
-                continue
-            elif type(old[f]) == datetime.datetime and \
-                    old[f] == datetime.datetime.strptime(
-                        new[f], '%Y-%m-%dT%H:%M:%S'):
-                continue
-
             try:
-                dj.Table._update(subject.Subject & subj_key, f, new[f])
+                dj.Table._update(table & pk, f, new[f])
                 msg = msg + f'Successfully updated field {f} ' + \
                     f'from {old[f]} to {new[f]}!\n'
             except Exception as e:

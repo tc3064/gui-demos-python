@@ -137,7 +137,10 @@ def create_edit_record_table(
     )
 
 
-def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add'):
+def create_modal(table, id=None, dropdown_fields=[], include_parts=False, mode='add'):
+
+    if not id:
+        id = table.__name__.lower()
 
     if not dropdown_fields:
         dropdown_fields = dj_utils.get_dropdown_fields(table)

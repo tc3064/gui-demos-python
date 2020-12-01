@@ -12,9 +12,8 @@ from costagui_demos.tab_templates import TableBlock
 import datetime
 
 
-subject_table_tab = TableBlock(subject.Subject, app)
+subject_table_tab = TableBlock(hardware.Computer, app)
 
-subject_table_tab.create_default_layout()
 
 if __name__ == '__main__':
     dj.config['safemode'] = False

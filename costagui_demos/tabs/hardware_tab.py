@@ -47,6 +47,12 @@ update_hardware_button = html.Button(
     id='update-hardware-button', n_clicks=0
 )
 
+# ------------------------- update hardware modal -----------------------
+update_hardware_modal = component_utils.create_modal(
+    hardware.Computer, 'hardware', include_parts=False,
+    mode='update'
+)
+
 
 # ------------------ dropdown menu for hardware options ----------------------
 
@@ -125,6 +131,7 @@ hardware_tab_contents = html.Div(
                     ],
                     style={'width': '50%', 'marginTop': '-22px'}
                 ),
+                update_hardware_modal,
                 # hidden variable for the current table
                 html.Div(id='current-table', style={'display': 'none'},
                          children='computer-menu-item')

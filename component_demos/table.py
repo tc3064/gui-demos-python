@@ -1,4 +1,4 @@
-import dash 
+import dash
 import dash_table
 import dash_html_components as html
 import dash_core_components as dcc
@@ -14,8 +14,8 @@ table_style_template = dict(
     fixed_columns={'headers': True, 'data': 1},
     style_cell={
         'textAlign': 'left',
-        'fontSize':12,
-        'font-family':'helvetica',
+        'fontSize': 12,
+        'font-family': 'helvetica',
         'minWidth': '120px', 'width': '120px', 'maxWidth': '120px',
         'overflow': 'hidden',
         'height': '30px'},
@@ -45,8 +45,8 @@ subject_table = dash_table.DataTable(
     **table_style_template
 )
 
-app.layout = html.Div(      #app MUST have a layout in order to launch, first UI element is Div 
-    children=[     #First argument is children (can include or not) & include a list 
+app.layout = html.Div(      #app MUST have a layout in order to launch, first UI element is Div
+    children=[     #First argument is children (can include or not) & include a list
         'Mouse table',
         subject_table
 ])
