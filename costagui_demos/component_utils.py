@@ -30,8 +30,11 @@ table_style_template = dict(
         'fontWeight': 'bold'})
 
 
-def create_display_table(table, table_id, height='900px', width='1200px',
+def create_display_table(table, table_id=None, height='900px', width='1200px',
                          selectable=True, excluded_fields=[], empty_first=False):
+
+    if not table_id:
+        table_id = lower(table.__name__)
 
     table_style = copy.deepcopy(table_style_template)
     table_style.update(
@@ -134,7 +137,10 @@ def create_edit_record_table(
     )
 
 
-def create_modal(table, id, dropdown_fields=[], include_parts=False, mode='add'):
+def create_modal(table, id=None, dropdown_fields=[], include_parts=False, mode='add'):
+
+    if not id:
+        id = table.__name__.lower()
 
     if not dropdown_fields:
         dropdown_fields = dj_utils.get_dropdown_fields(table)
