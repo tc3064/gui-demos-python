@@ -1,15 +1,12 @@
 import datajoint as dj
 import dash
-import dash_table
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import dash_html_components as html
-import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from costagui_demos.app import app
-from costagui_demos.dj_tables import lab, subject, hardware
-from costagui_demos import dj_utils, component_utils, callback_utils
-from costagui_demos.tab_templates import TableBlock
-import datetime
+from costagui_demos.dj_tables import lab, hardware
+from dj_dashboard.templates import TableBlock
+
 
 # Add all the tabs needed here.
 hardware_block = TableBlock(hardware.Computer, app)

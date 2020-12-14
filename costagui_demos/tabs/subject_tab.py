@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from costagui_demos.app import app
 from costagui_demos.dj_tables import lab, subject, hardware
-from costagui_demos import dj_utils, component_utils, callback_utils
+from dj_dashboard import dj_utils, component_utils, callback_utils
 import datetime
 
 
@@ -33,7 +33,8 @@ add_subject_button = html.Button(
     style=button_style)
 
 add_subject_modal = component_utils.create_modal(
-    subject.Subject, 'subject', include_parts=True,
+    subject.Subject, 'subject',
+    extra_tables=[subject.Subject.User, subject.Subject.Protocol],
     dropdown_fields=['sex', 'subject_strain'],
     mode='add'
 )
@@ -58,7 +59,8 @@ update_subject_button = html.Button(
 
 # -------- Pop up window with update table and message ------
 update_subject_modal = component_utils.create_modal(
-    subject.Subject, 'subject', include_parts=True,
+    subject.Subject, 'subject',
+    extra_tables=[subject.Subject.User, subject.Subject.Protocol],
     dropdown_fields=['sex', 'subject_strain'],
     mode='update'
 )
@@ -93,6 +95,12 @@ messagebox_style = {
     'height': 50,
     'marginBottom': '1em',
     'display': 'block'}
+
+add_subject_message_box = dcc.Textarea(
+    id='add-subject-message-box',
+    value='Add subject message:',
+    style=messagebox_style
+)
 
 delete_subject_message_box = dcc.Textarea(
     id='delete-subject-message-box',
@@ -515,10 +523,19 @@ def update_subject_record(
     old = (subject.Subject & subj_key).fetch1()
 
     msg = 'Update message:\n'
-    for f in table.heading.secondary_attributes:
+    for f in subject_fields:
         if new[f] != old[f] and not (old is None and new == ''):
+            if type(old[f]) == datetime.date and \
+                    old[f] == datetime.datetime.strptime(
+                        new[f], '%Y-%m-%d').date():
+                continue
+            elif type(old[f]) == datetime.datetime and \
+                    old[f] == datetime.datetime.strptime(
+                        new[f], '%Y-%m-%dT%H:%M:%S'):
+                continue
+
             try:
-                dj.Table._update(table & pk, f, new[f])
+                dj.Table._update(subject.Subject & subj_key, f, new[f])
                 msg = msg + f'Successfully updated field {f} ' + \
                     f'from {old[f]} to {new[f]}!\n'
             except Exception as e:

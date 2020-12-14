@@ -1,14 +1,8 @@
 
 import datajoint as dj
-import dash
-import dash_table
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
-import copy
-from dj_tables import lab, subject, hardware
-import dj_utils
 from costagui_demos.app import app
 
 from tabs import subject_tab, hardware_tab_from_template
