@@ -1,15 +1,13 @@
 import datajoint as dj
 import dash
-import dash_table
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
-import copy
 
 import dash_bootstrap_components as dbc
-from costagui_demos.dj_tables import hardware
+from costagui_demos.dj_tables import lab, hardware
 from costagui_demos.app import app
-from costagui_demos import dj_utils, component_utils
+from dj_dashboard import dj_utils, component_utils
 
 width = '900px'
 height = '200px'
