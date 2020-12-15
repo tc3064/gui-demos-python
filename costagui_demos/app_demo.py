@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 import copy
 
 from dj_tables import lab, subject
-import utils
+import dj_utils
 
 ## ========================= Create a flask app ===========================
 # dash does the job for you
@@ -74,7 +74,7 @@ subject_table = dash_table.DataTable(
 ## ------------------------- add subject table ------------------------------
 # some fields are presented as dropdown list
 for c in columns:
-    if c['name'] in ['sex', 'subject_line']:
+    if c['name'] in ['sex']:
         c.update(presentation='dropdown')
 
 # add subject table style
@@ -88,15 +88,12 @@ add_subject_style['style_table'].update({
 add_subject_table = dash_table.DataTable(
     id='add-subject-table',
     columns=columns,
-    data=[{c['id']: utils.get_default(subject.Subject, c['id']) for c in columns}],
+    data=[{c['id']: dj_utils.get_default(subject.Subject, c['id']) for c in columns}],
     **add_subject_style,
     editable=True,
     dropdown={
         'sex': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject, 'sex')]
-        },
-        'subject_line': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject, 'subject_line')]
+            'options': [{'label': i, 'value': i} for i in dj_utils.get_options(subject.Subject, 'sex')]
         }
     })
 
@@ -116,10 +113,7 @@ update_subject_table = dash_table.DataTable(
     editable=True,
     dropdown={
         'sex': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject, 'sex')]
-        },
-        'subject_line': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject, 'subject_line')]
+            'options': [{'label': i, 'value': i} for i in dj_utils.get_options(subject.Subject, 'sex')]
         }
     })
 
@@ -199,7 +193,7 @@ add_subject_users_style.update(
         'overflowY': 'scroll',
         'overflowX': 'scroll'},
 )
-unit_data = {c['id']: utils.get_default(subject.Subject.User, c['id'])
+unit_data = {c['id']: dj_utils.get_default(subject.Subject.User, c['id'])
              for c in subject_users_columns}
 add_subject_users_table = dash_table.DataTable(
     id='add-subject-users-table',
@@ -209,7 +203,7 @@ add_subject_users_table = dash_table.DataTable(
     editable=True,
     dropdown={
         'user': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject.User, 'user')]
+            'options': [{'label': i, 'value': i} for i in dj_utils.get_options(subject.Subject.User, 'user')]
         },
     })
 
@@ -239,19 +233,22 @@ add_subject_protocols_style.update(
         'overflowY': 'scroll',
         'overflowX': 'scroll'},
 )
-unit_data = {c['id']: utils.get_default(subject.Subject.Protocol, c['id'])
+unit_data = {c['id']: dj_utils.get_default(subject.Subject.Protocol, c['id'])
              for c in subject_protocols_columns}
 add_subject_protocols_table = dash_table.DataTable(
     id='add-subject-protocols-table',
     columns=subject_protocols_columns,
     data=[unit_data] * 3,
     **add_subject_protocols_style,
-    editable=True,
-    dropdown={
-        'protocol': {
-            'options': [{'label': i, 'value': i} for i in utils.get_options(subject.Subject.Protocol, 'protocol')]
-        },
-    })
+    editable=True
+    # ,
+    # dropdown={
+    #     'protocol': {
+    #         'options': [{'label': i, 'value': i} for i in dj_utils.get_options(subject.Subject.Protocol, 'protocol')]
+    #     },
+    # }
+
+    )
 
 ## ------------------------- add subject protocols button -------------------------------
 add_subject_protocols_button = html.Button(

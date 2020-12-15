@@ -12,7 +12,7 @@ from costagui_demos.tab_templates import TableBlock
 import datetime
 
 
-subject_table_tab = TableBlock(hardware.Computer, app)
+subject_table_tab = TableBlock(subject.Subject, app)
 
 
 if __name__ == '__main__':
