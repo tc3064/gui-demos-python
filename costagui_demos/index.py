@@ -4,23 +4,55 @@ from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
 from costagui_demos.app import app
+from tabs import subject_tab_from_template, hardware_tab_from_template, surgery_tab_from_template
+
+dj.conn().close()
 
 # ========================= Construct webpage layout ========================
-app.layout = html.Div(
+tabs = html.Div(
     [
         dcc.Tabs(
-            id="tabs", value='Log in',
+            id="tabs", value='Subject',
             children=[
-                dcc.Tab(id='log-in-tab', label='Log in', value='Log in'),
-                dcc.Tab(id='lab-tab', label='Lab', value='Lab', disabled=True),
-                dcc.Tab(id='subject-tab', label='Subject', value='Subject', disabled=True),
-                dcc.Tab(id='surgery-tab', label='Surgery', value='Surgery', disabled=True),
-                dcc.Tab(id='session-tab', label='Session', value='Session', disabled=True),
-                dcc.Tab(id='hardware-tab', label='Hardware', value='Hardware', disabled=True)
+                dcc.Tab(id='lab-tab', label='Lab', value='Lab'),
+                dcc.Tab(id='subject-tab', label='Subject', value='Subject'),
+                dcc.Tab(id='surgery-tab', label='Surgery', value='Surgery'),
+                dcc.Tab(id='session-tab', label='Session', value='Session'),
+                dcc.Tab(id='hardware-tab', label='Hardware', value='Hardware')
             ],
             style={'width': '50%', 'marginBottom': '2em'}),
         html.Div(id='tabs-content')
     ]
+)
+
+log_in_page = html.Div(
+    children=[
+        html.H4('Welcome to the Costa Lab GUI'),
+        html.H6('User name'),
+        dcc.Input(
+            id='user-name',
+            type='text',
+            placeholder=''
+        ),
+        html.H6('Password'),
+        dcc.Input(
+            id='password',
+            type='password',
+            placeholder='',
+            style={'display': 'block', 'marginBottom': '1em'}
+        ),
+        html.Button(
+            id='connection-button',
+            children='Connect'
+        ),
+        html.H6(id='connection-status', children='Not connected')
+    ],
+    style={'marginTop': '3em', 'marginLeft': '5em'}
+)
+
+app.layout = html.Div(
+    id='contents',
+    children=log_in_page
 )
 
 
@@ -29,40 +61,35 @@ app.layout = html.Div(
               [Input('tabs', 'value')])
 def render_content(tab):
 
-    if tab == 'Log in':
-        from tabs import log_in_tab
-        return log_in_tab.log_in_tab_contents
-    elif tab == 'Subject':
-        from tabs import subject_tab
-        return subject_tab.subject_tab_contents
+    if tab == 'Subject':
+        return subject_tab_from_template.tab.layout
     elif tab == 'Lab':
         return html.Div([
             html.H3('lab content')
         ])
     elif tab == 'Surgery':
-        return html.Div([
-            html.H3('Surgery content')
-        ])
+        return surgery_tab_from_template.surgery_table_tab.layout
     elif tab == 'Session':
         return html.Div([
             html.H3('Session content')
         ])
     elif tab == 'Hardware':
-        from tabs import hardware_tab_from_template
-        return hardware_tab_from_template.hardware_tab_contents
+        return hardware_tab_from_template.table_layouts
 
 
-tabs = ['lab-tab', 'subject-tab', 'surgery-tab', 'session-tab', 'hardware-tab']
 @app.callback(
-    [Output(tab, 'disabled') for tab in tabs] +
-    [Output('connection-status', 'children')],
+    [
+        Output('contents', 'children'),
+        Output('connection-status', 'children')
+    ],
     [Input('connection-button', 'n_clicks')],
     [
         State('user-name', 'value'),
-        State('password', 'value')
+        State('password', 'value'),
+        State('contents', 'children')
     ]
 )
-def enable_tabs(n_clicks, user, password):
+def render_page_contents(n_clicks, user, password, current_contents):
 
     if n_clicks:
         dj.config['database.host'] = '127.0.0.1'
@@ -70,13 +97,12 @@ def enable_tabs(n_clicks, user, password):
         dj.config['database.password'] = password
 
         try:
-            dj.conn()
-            return tuple([False for tab in tabs] + ['Connected.'])
+            dj.conn(reset=True).connect()
+            return [tabs] + ['Connected']
         except Exception as e:
-            return tuple([True for tab in tabs] + [
-                f'Connection error: {str(e)}'])
+            return [current_contents] + [f'Connection failed: {str(e)}']
     else:
-        return tuple([True for tab in tabs] + ['Not Connected.'])
+        return [current_contents] + ['Not connected']
 
 
 # ========================= Run server =========================
