@@ -1,10 +1,9 @@
-
-import datajoint as dj
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
 from costagui_demos.app import app
 from tabs import subject_tab_from_template, hardware_tab_from_template, surgery_tab_from_template
+import datajoint as dj
 
 dj.conn().close()
 
