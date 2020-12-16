@@ -96,7 +96,7 @@ def render_page_contents(n_clicks, user, password, current_contents):
         dj.config['database.password'] = password
 
         try:
-            dj.conn(reset=True).connect()
+            dj.conn().connect()
             return [tabs] + ['Connected']
         except Exception as e:
             return [current_contents] + [f'Connection failed: {str(e)}']
