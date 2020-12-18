@@ -3,6 +3,7 @@ from costagui_demos.app import app
 from dj_dashboard.templates import TableBlock
 from costagui_demos.dj_tables import lab, subject
 
+
 tab = TableBlock(
         subject.Subject, app,
         extra_tables=[subject.Subject.User, subject.Subject.Protocol])
