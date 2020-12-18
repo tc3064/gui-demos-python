@@ -61,19 +61,22 @@ app.layout = html.Div(
 def render_content(tab):
 
     if tab == 'Subject':
+        subject_tab_from_template.tab.refresh_tables()
         return subject_tab_from_template.tab.layout
     elif tab == 'Lab':
         return html.Div([
             html.H3('lab content')
         ])
     elif tab == 'Surgery':
+        surgery_tab_from_template.surgery_table_tab.refresh_tables()
         return surgery_tab_from_template.surgery_table_tab.layout
     elif tab == 'Session':
         return html.Div([
             html.H3('Session content')
         ])
     elif tab == 'Hardware':
-        return hardware_tab_from_template.table_layouts
+        hardware_tab_from_template.refresh_tables()
+        return hardware_tab_from_template.hardware_tab_contents
 
 
 @app.callback(
@@ -96,7 +99,7 @@ def render_page_contents(n_clicks, user, password, current_contents):
         dj.config['database.password'] = password
 
         try:
-            dj.conn().connect()
+            dj.conn(reset=True).connect()
             return [tabs] + ['Connected']
         except Exception as e:
             return [current_contents] + [f'Connection failed: {str(e)}']

@@ -13,6 +13,12 @@ hardware_block = TableBlock(hardware.Computer, app)
 software_block = TableBlock(hardware.Computer.InstalledSoftware, app)
 board_block = TableBlock(hardware.Board, app)
 
+
+def refresh_tables():
+    for b in [hardware_block, software_block, board_block]:
+        b.refresh_tables()
+
+
 table_layouts = {
     'computer-menu-item': hardware_block.layout,
     'software-menu-item': software_block.layout,
